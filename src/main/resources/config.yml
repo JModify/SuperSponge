@@ -1,0 +1,20 @@
+# -- SuperSponge configuration --
+# All super sponge configuration settings can be edited here.
+super-sponge:
+  properties:
+    # Should lava be cleared by the super sponge?
+    clear-lava: true
+    # Should water be cleared by the super sponge?
+    clear-water: true
+    # Delay between placing super sponges.
+    placement-delay: 10
+    # Delay between breaking super sponges.
+    break-delay: 5
+    # Radius for which this sponge should clear.
+    clear-radius: 8
+  # Item configuration for the super sponge.
+  item:
+    name: "&c&lSuper Sponge"
+    lore:
+      - "&7Soaks up water and lava in a 16 block radius."
+    enchant-glow: true
