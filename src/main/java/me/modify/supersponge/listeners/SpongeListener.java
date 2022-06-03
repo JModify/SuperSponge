@@ -7,11 +7,9 @@ import me.modify.supersponge.objects.SuperSpongeLocation;
 import me.modify.supersponge.util.Constants;
 import me.modify.supersponge.util.SpongeAbsorbFunction;
 import me.modify.supersponge.util.SpongeUtil;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,7 +36,7 @@ public class SpongeListener implements Listener {
 
         SuperSpongeManager manager = SuperSponge.getInstance().getSuperSpongeManager();
         if (manager.isSuperSponge(event.getItemInHand())) {
-            manager.handleSuperSpongePlacement(block);
+            manager.handleSuperSpongePlacement(event);
         } else {
             if (block.getType() == Material.SPONGE) {
                 handleDefaultSpongePlacement(block);
@@ -55,18 +53,7 @@ public class SpongeListener implements Listener {
         SuperSpongeLocationCache spongeLocations = manager.getSpongeLocations();
         SuperSpongeLocation superSpongeLocation = SuperSpongeLocation.fromBukkitLocation(event.getBlock().getLocation());
         if (spongeLocations.isSuperSpongeLocation(superSpongeLocation)) {
-            event.setCancelled(true);
-
-            block.setType(Material.AIR);
-            spongeLocations.removeLocation(superSpongeLocation);
-
-            if (player.getGameMode() == GameMode.CREATIVE) return;
-            try {
-                block.getWorld().dropItemNaturally(block.getLocation(), manager.getSuperSpongeItem(1));
-            } catch (InvalidConfigurationException e) {
-                e.printStackTrace();
-            }
-
+            manager.handleSuperSpongeBreak(event, superSpongeLocation);
         }
     }
 
@@ -81,7 +68,7 @@ public class SpongeListener implements Listener {
         }
         if (!inLava) return;
 
-        int radius = Constants.DEFAULT_LAVA_SPONGE_RADIUS;
+        int radius = Constants.DEFAULT_SPONGE_RADIUS;
 
         SpongeAbsorbFunction spongeAbsorbFunction = absorbedBlock -> {
             if (absorbedBlock.getType() == Material.LAVA) {
@@ -89,7 +76,7 @@ public class SpongeListener implements Listener {
             }
         };
 
-        SpongeUtil.absorbRadius(block, radius, spongeAbsorbFunction);
+        SpongeUtil.absorbSphereRadius(block, radius, spongeAbsorbFunction);
     }
 
 }

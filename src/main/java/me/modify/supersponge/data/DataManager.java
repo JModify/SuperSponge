@@ -4,6 +4,7 @@ import com.modify.fundamentum.config.Config;
 import com.modify.fundamentum.text.PlugLogger;
 import lombok.Getter;
 import me.modify.supersponge.SuperSponge;
+import me.modify.supersponge.managers.SuperSpongeManager;
 
 import java.io.InputStream;
 
@@ -43,7 +44,8 @@ public class DataManager {
             SuperSponge plugin = SuperSponge.getInstance();
             InputStream stream = plugin.getResource(file.getName() + ".yml");
             Config.copy(stream, file.getFile());
-            PlugLogger.logInfo(file.getName() + " does not exist. Copying defaults.");
+
+            SuperSponge.getInstance().getDebugger().sendDebugInfo(file.getName() + ".yml file does not exist. Copying defaults.");
         }
     }
 
@@ -65,7 +67,12 @@ public class DataManager {
      * Reloads all configuration files
      */
     public void reloadConfigurations() {
+
         initialize();
+
+        SuperSpongeManager manager = SuperSponge.getInstance().getSuperSpongeManager();
+        manager.save();
+        manager.load();
     }
 
 }

@@ -1,6 +1,7 @@
 package me.modify.supersponge.commands;
 
 import com.modify.fundamentum.text.ColorUtil;
+import com.modify.fundamentum.util.PlugDebugger;
 import me.modify.supersponge.SuperSponge;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -20,10 +21,48 @@ public class SuperSpongeCommand extends BukkitCommand {
 
         int length = args.length;
 
-        if (length == 3) {
+        if (length == 1) {
+
+            if (args[0].equalsIgnoreCase("reload")) {
+
+                if (!sender.hasPermission("supersponge.reload")) {
+                    sender.sendMessage(ColorUtil.format("&4&l(!) &r&cInsufficient permissions."));
+                    return true;
+                }
+
+                SuperSponge.getInstance().getDataManager().reloadConfigurations();
+                sender.sendMessage(ColorUtil.format("&2&l(✓) &aPlugin successfully reloaded."));
+
+            } else if (args[0].equalsIgnoreCase("debug")) {
+
+                if (!sender.hasPermission("supersponge.debug")) {
+                    sender.sendMessage(ColorUtil.format("&4&l(!) &r&cInsufficient permissions."));
+                    return true;
+                }
+
+                PlugDebugger debugger = SuperSponge.getInstance().getDebugger();
+                if (debugger.isDebugMode()) {
+                    debugger.setDebugMode(false);
+                    sender.sendMessage(ColorUtil.format("&2&l(✓) &aPlugin debug mode disabled."));
+                    return true;
+                }
+
+                sender.sendMessage(ColorUtil.format("&2&l(✓) &aPlugin debug mode enabled."));
+                debugger.setDebugMode(true);
+            } else {
+                sendSyntaxMessage(sender);
+                return true;
+            }
+
+
+        } else if (length == 2) {
+
+
+        } else if (length == 3) {
+
             if (args[0].equalsIgnoreCase("give")) {
 
-                if (!sender.hasPermission("townysmp.supersponge.give")) {
+                if (!sender.hasPermission("supersponge.give")) {
                     sender.sendMessage(ColorUtil.format("&4&l(!) &r&cInsufficient permissions."));
                     return true;
                 }
@@ -69,5 +108,6 @@ public class SuperSpongeCommand extends BukkitCommand {
     private void sendSyntaxMessage(CommandSender sender) {
         sender.sendMessage(ColorUtil.format("&4&l(!) Invalid usage. Valid syntax:"));
         sender.sendMessage(ColorUtil.format("&c/supersponge give <player> <quantity>"));
+        sender.sendMessage(ColorUtil.format("&c/supersponge reload"));
     }
 }

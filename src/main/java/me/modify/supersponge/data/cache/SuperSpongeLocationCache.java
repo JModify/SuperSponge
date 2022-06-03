@@ -2,6 +2,7 @@ package me.modify.supersponge.data.cache;
 
 import com.modify.fundamentum.config.Config;
 import com.modify.fundamentum.text.PlugLogger;
+import com.modify.fundamentum.util.PlugDebugger;
 import me.modify.supersponge.SuperSponge;
 import me.modify.supersponge.exceptions.SpongeLocationParseException;
 import me.modify.supersponge.exceptions.WorldNotFoundException;
@@ -45,7 +46,8 @@ public class SuperSpongeLocationCache {
                 e.printStackTrace();
             }
         }
-        PlugLogger.logInfo("Successfully loaded " + locations.size() + " super sponge locations from data.yml file.");
+
+        SuperSponge.getInstance().getDebugger().sendDebugInfo("Successfully loaded " + locations.size() + " super sponge locations from data.yml file.");
     }
 
     public void save() {
@@ -59,7 +61,7 @@ public class SuperSpongeLocationCache {
         dataFile.getConfig().set("super-sponge-locations", locations);
         dataFile.saveConfig();
 
-        PlugLogger.logInfo("Successfully saved " + locations.size() + " super sponge locations to data.yml file.");
+        SuperSponge.getInstance().getDebugger().sendDebugInfo("Successfully saved " + locations.size() + " super sponge locations to data.yml file.");
     }
 
 }

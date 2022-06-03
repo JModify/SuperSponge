@@ -5,6 +5,8 @@ import me.modify.supersponge.data.cache.SuperSpongePropertyCache;
 import com.modify.fundamentum.text.ColorUtil;
 import lombok.Getter;
 import me.modify.supersponge.SuperSponge;
+import me.modify.supersponge.objects.BlockedType;
+import me.modify.supersponge.objects.SuperSpongeLocation;
 import me.modify.supersponge.util.Constants;
 import me.modify.supersponge.util.SpongeAbsorbFunction;
 import me.modify.supersponge.util.SpongeUtil;
@@ -15,6 +17,9 @@ import org.bukkit.block.data.Waterlogged;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -22,6 +27,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
+import java.util.UUID;
 
 public class SuperSpongeManager {
 
@@ -44,16 +50,17 @@ public class SuperSpongeManager {
     }
 
     /**
-     * Caches all super sponge locations from file into the SuperSpongeLocationCache.
+     * Loads all super sponge data from data file.
      */
-    public void loadLocations() {
+    public void load() {
         spongeLocations.load();
+        spongeProperties.loadFromFile();
     }
 
     /**
-     * Saves all super sponge locations from SuperSpongeLocationCache into data file.
+     * Saves all super sponge caches back into data file.
      */
-    public void saveLocations() {
+    public void save() {
         spongeLocations.save();
     }
 
@@ -142,9 +149,26 @@ public class SuperSpongeManager {
 
     /**
      * Handles the block place event when a super sponge is placed.
-     * @param placedBlock block to handle
+     * @param event event to handle
      */
-    public void handleSuperSpongePlacement(Block placedBlock) {
+    public void handleSuperSpongePlacement(BlockPlaceEvent event) {
+
+        Player player = event.getPlayer();
+        Block placedBlock = event.getBlock();
+
+        UUID playerId = player.getUniqueId();
+
+        if (delayManager.shouldDelayPlacements()) {
+            if (!player.hasPermission("supersponge.delay.place.bypass")) {
+                if (delayManager.isBlocked(playerId, BlockedType.PLACING)) {
+                    event.setCancelled(true);
+                    int timeRemaining = delayManager.getTimeRemaining(playerId, BlockedType.PLACING);
+                    player.sendMessage(ColorUtil.format("&4&l(!) &r&cYou must wait " + timeRemaining + " seconds before placing another super sponge."));
+                    return;
+                }
+                delayManager.blockUser(playerId, BlockedType.PLACING);
+            }
+        }
         this.getSpongeLocations().addLocation(placedBlock.getLocation());
 
         boolean inLiquid = false;
@@ -191,7 +215,49 @@ public class SuperSpongeManager {
             }
         };
 
-        SpongeUtil.absorbRadius(placedBlock, radius, spongeAbsorbFunction);
+        if (spongeProperties.shouldAbsorbSphere()) {
+            SpongeUtil.absorbSphereRadius(placedBlock, radius, spongeAbsorbFunction);
+            return;
+        }
+
+        SpongeUtil.absorbCubeRadius(placedBlock, radius, spongeAbsorbFunction);
+    }
+
+    /**
+     * Handles the block place event when a super sponge is broken
+     * @param event event to handle
+     * @param superSpongeLocation location of the super sponge.
+     */
+    public void handleSuperSpongeBreak(BlockBreakEvent event, SuperSpongeLocation superSpongeLocation) {
+
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+
+        event.setCancelled(true);
+
+        UUID playerId = player.getUniqueId();
+        SuperSpongeDelayManager delayManager = getDelayManager();
+
+        if (delayManager.shouldDelayBreaking()) {
+            if (!player.hasPermission("supersponge.delay.break.bypass")) {
+                if (delayManager.isBlocked(playerId, BlockedType.BREAKING)) {
+                    int timeRemaining = delayManager.getTimeRemaining(playerId, BlockedType.BREAKING);
+                    player.sendMessage(ColorUtil.format("&4&l(!) &r&cYou must wait " + timeRemaining + " second(s) before destroying another super sponge."));
+                    return;
+                }
+                delayManager.blockUser(playerId, BlockedType.BREAKING);
+            }
+        }
+
+        block.setType(Material.AIR);
+        spongeLocations.removeLocation(superSpongeLocation);
+
+        if (player.getGameMode() == GameMode.CREATIVE) return;
+        try {
+            block.getWorld().dropItemNaturally(block.getLocation(), getSuperSpongeItem(1));
+        } catch (InvalidConfigurationException e) {
+            e.printStackTrace();
+        }
     }
 
 }

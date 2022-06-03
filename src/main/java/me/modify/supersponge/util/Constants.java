@@ -18,5 +18,5 @@ public class Constants {
     public static final long FIVE_MINUTES_IN_TICKS = 6000;
 
     /** The default sponge clearing radius for lava */
-    public static final int DEFAULT_LAVA_SPONGE_RADIUS = 5;
+    public static final int DEFAULT_SPONGE_RADIUS = 4;
 }

@@ -1,6 +1,7 @@
 package me.modify.supersponge;
 
 import com.modify.fundamentum.Fundamentum;
+import com.modify.fundamentum.util.PlugDebugger;
 import com.modify.fundamentum.util.PlugUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,8 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class SuperSponge extends JavaPlugin {
 
-    @Getter
-    @Setter
+    @Getter @Setter
     private static SuperSponge instance;
 
     @Getter
@@ -25,6 +25,9 @@ public class SuperSponge extends JavaPlugin {
 
     @Getter
     private SuperSpongeManager superSpongeManager;
+
+    @Getter
+    private PlugDebugger debugger;
 
     @Override
     public void onEnable() {
@@ -41,19 +44,21 @@ public class SuperSponge extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        superSpongeManager.saveLocations();
+        superSpongeManager.save();
     }
 
     private void initialize() {
+        debugger = new PlugDebugger();
+
         dataManager = new DataManager();
         dataManager.initialize();
 
         superSpongeManager = new SuperSpongeManager();
-        superSpongeManager.loadLocations();
+        superSpongeManager.load();
     }
 
     private void startRepeatingTimers() {
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new SuperSpongeLocationSaveTimer(), 0L, Constants.FIVE_MINUTES_IN_TICKS);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new SuperSpongeLocationSaveTimer(), Constants.FIVE_MINUTES_IN_TICKS, Constants.FIVE_MINUTES_IN_TICKS);
     }
 
     private void registerListeners() {

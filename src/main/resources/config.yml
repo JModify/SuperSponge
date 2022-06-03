@@ -6,9 +6,12 @@ super-sponge:
     clear-lava: true
     # Should water be cleared by the super sponge?
     clear-water: true
-    # Delay between placing super sponges.
-    placement-delay: 10
-    # Delay between breaking super sponges.
+    # Should super sponge absorb water/lava in a sphere shape?
+    # If this is false, the super sponge will absorb a cube based on radius.
+    absorb-sphere: false
+    # Delay between placing super sponges. Set to -1 to disable.
+    placement-delay: 5
+    # Delay between breaking super sponges. Set to -1 to disable.
     break-delay: 5
     # Radius for which this sponge should clear.
     clear-radius: 8

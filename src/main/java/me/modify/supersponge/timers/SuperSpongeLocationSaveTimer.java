@@ -11,7 +11,7 @@ public class SuperSpongeLocationSaveTimer implements Runnable {
 
     @Override
     public void run() {
-        SuperSponge.getInstance().getSuperSpongeManager().saveLocations();
+        SuperSponge.getInstance().getSuperSpongeManager().save();
     }
 
 
