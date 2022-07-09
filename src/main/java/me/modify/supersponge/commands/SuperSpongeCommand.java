@@ -10,10 +10,13 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
+
 public class SuperSpongeCommand extends BukkitCommand {
 
     public SuperSpongeCommand() {
         super("supersponge");
+        setAliases(Arrays.asList("ss", "supers", "ssponge"));
     }
 
     @Override

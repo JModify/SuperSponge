@@ -67,7 +67,6 @@ public class DataManager {
      * Reloads all configuration files
      */
     public void reloadConfigurations() {
-
         initialize();
 
         SuperSpongeManager manager = SuperSponge.getInstance().getSuperSpongeManager();

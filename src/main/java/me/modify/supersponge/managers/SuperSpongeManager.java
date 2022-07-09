@@ -5,6 +5,8 @@ import me.modify.supersponge.data.cache.SuperSpongePropertyCache;
 import com.modify.fundamentum.text.ColorUtil;
 import lombok.Getter;
 import me.modify.supersponge.SuperSponge;
+import me.modify.supersponge.hooks.CoreProtectHook;
+import me.modify.supersponge.objects.AbsorbShape;
 import me.modify.supersponge.objects.BlockedType;
 import me.modify.supersponge.objects.SuperSpongeLocation;
 import me.modify.supersponge.util.Constants;
@@ -13,6 +15,7 @@ import me.modify.supersponge.util.SpongeUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -54,7 +57,7 @@ public class SuperSpongeManager {
      */
     public void load() {
         spongeLocations.load();
-        spongeProperties.loadFromFile();
+        spongeProperties.load();
     }
 
     /**
@@ -169,7 +172,9 @@ public class SuperSpongeManager {
                 delayManager.blockUser(playerId, BlockedType.PLACING);
             }
         }
-        this.getSpongeLocations().addLocation(placedBlock.getLocation());
+
+
+        spongeLocations.addLocation(placedBlock.getLocation());
 
         boolean inLiquid = false;
         for (BlockFace f : Constants.BLOCK_ADJACENTS) {
@@ -182,12 +187,20 @@ public class SuperSpongeManager {
 
         SuperSpongePropertyCache spongeProperties = getSpongeProperties();
         int radius = spongeProperties.getClearRadius();
+        boolean blockUpdates = SuperSponge.getInstance().getSuperSpongeManager().getSpongeProperties().shouldDoBlockUpdates();
 
+        CoreProtectHook coreProtectHook = SuperSponge.getInstance().getCoreProtectHook();
         SpongeAbsorbFunction spongeAbsorbFunction = blockToAbsorb -> {
-            // Checks i
+
+            BlockData blockData = blockToAbsorb.getBlockData();
+            Material material = blockToAbsorb.getType();
+            Location location = blockToAbsorb.getLocation();
+
+            // Checks if the block is a lava block
             if (spongeProperties.shouldClearLava()) {
-                if (blockToAbsorb.getType() == Material.LAVA) {
-                    blockToAbsorb.setType(Material.AIR);
+                if (material == Material.LAVA) {
+                    blockToAbsorb.setType(Material.AIR, blockUpdates);
+                    coreProtectHook.logBlockRemoval(player.getName(), location, material, blockData);
                     return;
                 }
             }
@@ -197,30 +210,33 @@ public class SuperSpongeManager {
                 if (blockToAbsorb.getBlockData() instanceof Waterlogged waterlogged) {
                     if (waterlogged.isWaterlogged()) {
                         waterlogged.setWaterlogged(false);
+                        coreProtectHook.logBlockRemoval(player.getName(), location, material, blockData);
                         return;
                     }
                 }
 
                 // Checks if block is a pure water block, then continues loop
-                if (blockToAbsorb.getType() == Material.WATER) {
-                    blockToAbsorb.setType(Material.AIR);
+                if (material == Material.WATER) {
+                    blockToAbsorb.setType(Material.AIR, blockUpdates);
+                    coreProtectHook.logBlockRemoval(player.getName(), location, material, blockData);
                     return;
                 }
 
                 // Checks if block is seagrass or tall-seagrass, breaks them then sets block to air to remove water.
-                if (blockToAbsorb.getType() == Material.SEAGRASS || blockToAbsorb.getType() == Material.TALL_SEAGRASS) {
+                if (material == Material.SEAGRASS || material == Material.TALL_SEAGRASS) {
                     blockToAbsorb.breakNaturally();
-                    blockToAbsorb.setType(Material.AIR);
+                    blockToAbsorb.setType(Material.AIR, blockUpdates);
+                    coreProtectHook.logBlockRemoval(player.getName(), location, material, blockData);
                 }
             }
         };
 
         if (spongeProperties.shouldAbsorbSphere()) {
-            SpongeUtil.absorbSphereRadius(placedBlock, radius, spongeAbsorbFunction);
+            SpongeUtil.absorbRadius(placedBlock, radius, AbsorbShape.SPHERE, spongeAbsorbFunction);
             return;
         }
 
-        SpongeUtil.absorbCubeRadius(placedBlock, radius, spongeAbsorbFunction);
+        SpongeUtil.absorbRadius(placedBlock, radius, AbsorbShape.CUBE, spongeAbsorbFunction);
     }
 
     /**
@@ -233,8 +249,6 @@ public class SuperSpongeManager {
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
-        event.setCancelled(true);
-
         UUID playerId = player.getUniqueId();
         SuperSpongeDelayManager delayManager = getDelayManager();
 
@@ -242,7 +256,8 @@ public class SuperSpongeManager {
             if (!player.hasPermission("supersponge.delay.break.bypass")) {
                 if (delayManager.isBlocked(playerId, BlockedType.BREAKING)) {
                     int timeRemaining = delayManager.getTimeRemaining(playerId, BlockedType.BREAKING);
-                    player.sendMessage(ColorUtil.format("&4&l(!) &r&cYou must wait " + timeRemaining + " second(s) before destroying another super sponge."));
+                    player.sendMessage(ColorUtil.format("&4&l(!) &r&cYou must wait " + timeRemaining + " seconds before breaking another super sponge."));
+                    event.setCancelled(true);
                     return;
                 }
                 delayManager.blockUser(playerId, BlockedType.BREAKING);
@@ -253,9 +268,16 @@ public class SuperSpongeManager {
         spongeLocations.removeLocation(superSpongeLocation);
 
         if (player.getGameMode() == GameMode.CREATIVE) return;
+
+        Location locationToDrop = block.getLocation();
+        locationToDrop.add(0.5, 0.5, 0.5);
+
         try {
-            block.getWorld().dropItemNaturally(block.getLocation(), getSuperSpongeItem(1));
+            // Spigot bug with dropItemNaturally when there is a wall, have to use dropItem for this reason.
+            //block.getWorld().dropItemNaturally(block.getLocation(), getSuperSpongeItem(1));
+            block.getWorld().dropItem(locationToDrop, getSuperSpongeItem(1));
         } catch (InvalidConfigurationException e) {
+            SuperSponge.getInstance().getDebugger().sendDebugError("Failed to drop super sponge item at " + superSpongeLocation.toString() + ". Loss of super sponge");
             e.printStackTrace();
         }
     }

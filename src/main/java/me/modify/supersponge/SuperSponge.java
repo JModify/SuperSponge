@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.modify.supersponge.commands.SuperSpongeCommand;
 import me.modify.supersponge.data.DataManager;
+import me.modify.supersponge.hooks.CoreProtectHook;
 import me.modify.supersponge.listeners.SpongeListener;
 import me.modify.supersponge.managers.SuperSpongeManager;
 import me.modify.supersponge.timers.SuperSpongeLocationSaveTimer;
@@ -29,6 +30,9 @@ public class SuperSponge extends JavaPlugin {
     @Getter
     private PlugDebugger debugger;
 
+    @Getter
+    private CoreProtectHook coreProtectHook;
+
     @Override
     public void onEnable() {
         setInstance(this);
@@ -49,12 +53,16 @@ public class SuperSponge extends JavaPlugin {
 
     private void initialize() {
         debugger = new PlugDebugger();
+        debugger.setDebugMode(true);
 
         dataManager = new DataManager();
         dataManager.initialize();
 
         superSpongeManager = new SuperSpongeManager();
         superSpongeManager.load();
+
+        coreProtectHook = new CoreProtectHook();
+        coreProtectHook.check();
     }
 
     private void startRepeatingTimers() {

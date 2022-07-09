@@ -1,8 +1,10 @@
 package me.modify.supersponge.listeners;
 
+import com.modify.fundamentum.text.PlugLogger;
 import me.modify.supersponge.SuperSponge;
 import me.modify.supersponge.data.cache.SuperSpongeLocationCache;
 import me.modify.supersponge.managers.SuperSpongeManager;
+import me.modify.supersponge.objects.AbsorbShape;
 import me.modify.supersponge.objects.SuperSpongeLocation;
 import me.modify.supersponge.util.Constants;
 import me.modify.supersponge.util.SpongeAbsorbFunction;
@@ -12,6 +14,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -29,10 +32,12 @@ public class SpongeListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
 
         Block block = event.getBlock();
+
+        if (event.isCancelled()) return;
 
         SuperSpongeManager manager = SuperSponge.getInstance().getSuperSpongeManager();
         if (manager.isSuperSponge(event.getItemInHand())) {
@@ -44,14 +49,16 @@ public class SpongeListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
+        if (event.isCancelled()) return;
+
         SuperSpongeManager manager = SuperSponge.getInstance().getSuperSpongeManager();
         SuperSpongeLocationCache spongeLocations = manager.getSpongeLocations();
-        SuperSpongeLocation superSpongeLocation = SuperSpongeLocation.fromBukkitLocation(event.getBlock().getLocation());
+        SuperSpongeLocation superSpongeLocation = SuperSpongeLocation.fromBukkitLocation(block.getLocation());
         if (spongeLocations.isSuperSpongeLocation(superSpongeLocation)) {
             manager.handleSuperSpongeBreak(event, superSpongeLocation);
         }
@@ -76,7 +83,7 @@ public class SpongeListener implements Listener {
             }
         };
 
-        SpongeUtil.absorbSphereRadius(block, radius, spongeAbsorbFunction);
+        SpongeUtil.absorbRadius(block, radius, AbsorbShape.SPHERE, spongeAbsorbFunction);
     }
 
 }

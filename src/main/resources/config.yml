@@ -9,6 +9,9 @@ super-sponge:
     # Should super sponge absorb water/lava in a sphere shape?
     # If this is false, the super sponge will absorb a cube based on radius.
     absorb-sphere: false
+    # Should super sponges update surrounding blocks when placed
+    # If this is enabled, water/lava will re-fill
+    block-updates: false
     # Delay between placing super sponges. Set to -1 to disable.
     placement-delay: 5
     # Delay between breaking super sponges. Set to -1 to disable.

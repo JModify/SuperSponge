@@ -1,5 +1,6 @@
 name: SuperSponge
-version: 1.0.0
+version: ${project.version}
 main: me.modify.supersponge.SuperSponge
 description: Sponge enhancing plugin which adds a new super sponge item to the game.
 api-version: 1.18
+softdepend: [CoreProtect]

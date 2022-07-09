@@ -19,4 +19,8 @@ public class Constants {
 
     /** The default sponge clearing radius for lava */
     public static final int DEFAULT_SPONGE_RADIUS = 4;
+
+    public static final int LOWEST_Y_AXIS_COORD = -64;
+
+    public static final int HIGHEST_Y_AXIS_COORD = 319;
 }
