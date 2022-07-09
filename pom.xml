@@ -6,7 +6,7 @@
 
     <groupId>me.modify.supersponge</groupId>
     <artifactId>SuperSponge</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 
     <properties>
         <java.version>17</java.version>
@@ -88,6 +88,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>playpro-repo</id>
+            <url>https://maven.playpro.com</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -108,6 +112,12 @@
             <artifactId>Fundamentum</artifactId>
             <version>master-142d88c840-1</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.coreprotect</groupId>
+            <artifactId>coreprotect</artifactId>
+            <version>21.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
